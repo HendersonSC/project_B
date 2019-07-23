@@ -4,7 +4,7 @@
 # Nicole Callais
 # Shane Christopher Henderson
 # Stephen Opeyemi Fatokun
-#
+##############################################
 # 07/22/2019
 # A python program retrieving lotto data from an internet website, and plotting
 # the frequency of each number to show the most frequently occuring number.
