@@ -14,69 +14,81 @@ import shutil
 import tempfile
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-# sfatokun
-# Flattening out the data frame of the winning number
-# into a single list
-def winning_num(za):
-        z = []
-        for a in za:
-                n = str(a)
-                m = n.split()
-                z = z + m
-        return z
+#sfatokun
+# Tally the occurances of each winning number
+def count_num(df):
+    count = np.zeros(75,dtype=np.int32)
+    for i in range(1,6):
+        nums = df["ball"+str(i)].values
+        for j in nums:
+            count[j-1] += 1
+    return count
 
-# sfatokun
-# Converting each element in the winning list into
-# integer data type
-def convert_int(za):
-        p = []
-        for b in za:
-                p1 = [int(b)]
-                p = p + p1
-        return p
+#sfatokun
+# Tally the occurances of each winning number
+def count_pb(df):
+    count = np.zeros(75,dtype=np.int32)
+    nums = df["Mega Ball"].values
+    for j in nums:
+        count[j-1] += 1
+    print(count)
+    return count
 
-# sfatokun
-# Counting the number of occurrence for each number
-# from the Winning number data frame
-def count_num(za):
-        q = []
-        for c in range(1,76):
-                q1 = [za.count(c)]
-                q = q + q1
-        return(q)
-
-# sfatokun
-# Extracting the Winning Numbers and Mega Ball data frame into
-# variables "win" and "mega" respectively
+#ncallais
+# Extracting the Winning Numbers and Mega Ball data
 def create_plot(lotto_data_frame):
-    win = lotto_data_frame["Winning Numbers"]
-    mega = lotto_data_frame["Mega Ball"]
 
     # sfatokun
-    # Converting winning number series type to a list type
-    win_list = winning_num(win)
-    # Converting all element of the list to type int
-    win_int = convert_int(win_list)
     # Getting the frequency of occurrence for each winning number
-    win_count = count_num(win_int)
-
-    # Converting all element of the mega data frame from type int64
-    # to type int
-    mega_int = convert_int(mega)
-    # Getting the frequency of occurrence for each mega ball number
-    mega_count = count_num(mega_int)
-    # Declaring the x-axis lenght (1 to 75)
+    win_count = count_num(df)
+    mega_count = count_pb(df)
     nums = range(1,76)
 
     # Line plot of the Winning Number and Mega Ball
-    plt.plot(nums, win_count)
-    plt.plot(nums, mega_count)
+    ## ncallais
+    plt.title('Winning Lotto Numbers Frequency')
+
+    # Label lines
+    plt.plot(nums, win_count, label='Lotto Numbers')
+    plt.plot(nums, mega_count, label='Megaball')
+
+    # Label x & y axes
+    plt.ylabel('Frequency')
+    plt.xlabel('Ball Number')
+
+    ## Add legend in upper right corner
+    plt.legend(prop={'size': 6}, loc="upper right")
+
+    ### Calculate modes
+    win_mode = win_count.argmax() + 1
+    win_mode_count = win_count[win_mode]
+    mega_mode = mega_count.argmax() + 1
+    mega_mode_count = mega_count[mega_mode-1]
+    print(mega_mode,mega_mode_count)
+
+    ## Plot arrow for mega mode and label
+    mega_label = 'Megaball = '+ str(mega_mode)
+    meg_pos = (mega_mode,mega_mode_count)
+    meg_txt_pos = (0.5, 0.5)
+    plt.annotate(s=mega_label, xy=meg_pos, xytext=meg_txt_pos, \
+            fontsize=8, arrowprops=dict(facecolor='black', \
+            shrink=0.05), textcoords='axes fraction',\
+            horizontalalignment='left', verticalalignment='top')
+
+    ## Plot win mode line and label
+    win_label = 'Most frequent = '+ str(win_mode)
+    plt.axvline(x=win_mode, color = 'red')
+    x_text_annotation = plt.annotate(s=win_label, textcoords='axes fraction', \
+            xy=((win_mode/75)+.1,.95), fontsize=8)
+
+    ## Show plot
     plt.show()
 
 #shende25
 # Get the data from the remote resource
-def get_file(url,data_file):
+def get_file(url):
     # Try contacting the server and getting the data
     try:
         response = urlopen(Request(url))
@@ -90,16 +102,31 @@ def get_file(url,data_file):
         elif hasattr(e, 'code'):
             print('Server Error!')
             print('Error code: ', e.code)
+        return None
 
     # Get the data and store for use as a temporary
     else:
+        # Setup and return temporary file for holding data
+        data_file = tempfile.NamedTemporaryFile()
         shutil.copyfileobj(response,data_file)
         data_file.seek(0)
+        return data_file
+
+#shend25 
+# Get a working data frame with just necessary information
+def get_work_df(data_file):
+    # Create "master" dataframe
+    df = pd.read_csv(data_file)
+    # For the sake of expedience separate out wining numbers and powerball
+    df_nums = pd.DataFrame(data=df["Winning Numbers"].str.split().to_list(), \
+            columns=["ball1","ball2","ball3","ball4","ball5"]).astype(np.int8)
+    df_nums["Mega Ball"] = pd.DataFrame(data=df["Mega Ball"]).astype(np.int8)
+    return df_nums
 
 #shende25
 if __name__ == "__main__":
-    # Setup temporary file for holding data
-    data_file = tempfile.NamedTemporaryFile()
     # Get data from remote resource
-    get_file(input("Enter URL: ",),data_file)
-    create_plot(pd.read_csv(data_file))
+    data_file = get_file(input("Enter URL: ",))
+    if data_file:
+        df = get_work_df(data_file)
+        create_plot(df)
