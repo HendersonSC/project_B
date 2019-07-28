@@ -44,11 +44,12 @@ def create_plot(lotto_data_frame):
     # Getting the frequency of occurrence for each winning number
     win_count = count_num(df)
     mega_count = count_pb(df)
-    nums = range(1,76)
 
     # Line plot of the Winning Number and Mega Ball
     ## ncallais
     plt.title('Winning Lotto Numbers Frequency')
+    nums = np.arange(1,76)
+    print(nums)
 
     # Label lines
     plt.plot(nums, win_count, label='Lotto Numbers')
@@ -71,10 +72,9 @@ def create_plot(lotto_data_frame):
     ## Plot arrow for mega mode and label
     mega_label = 'Megaball = '+ str(mega_mode)
     meg_pos = (mega_mode,mega_mode_count)
-    meg_txt_pos = (0.5, 0.5)
+    meg_txt_pos = (mega_mode+4,mega_mode_count*1.15)
     plt.annotate(s=mega_label, xy=meg_pos, xytext=meg_txt_pos, \
-            fontsize=8, arrowprops=dict(facecolor='black', \
-            shrink=0.05), textcoords='axes fraction',\
+            fontsize=8, arrowprops=dict(facecolor='black',shrink=0.05), \
             horizontalalignment='left', verticalalignment='top')
 
     ## Plot win mode line and label
